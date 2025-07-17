@@ -1,0 +1,33 @@
+"use client";
+
+import { CldUploadWidget } from "next-cloudinary";
+
+export default function TestCloudinary() {
+	return (
+		<div className="p-8">
+			<h1>Test Cloudinary Upload</h1>
+			<p>Cloud Name: {process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}</p>
+
+			<CldUploadWidget
+				uploadPreset="seeyouprofiles"
+				onSuccess={(result: any) => {
+					console.log("Success:", result);
+					alert("Upload successful!");
+				}}
+				onError={(error: any) => {
+					console.error("Error:", error);
+					alert("Upload failed: " + error.message);
+				}}
+			>
+				{({ open }) => (
+					<button
+						onClick={() => open()}
+						className="bg-blue-500 text-white p-2 rounded"
+					>
+						Test Upload
+					</button>
+				)}
+			</CldUploadWidget>
+		</div>
+	);
+}
