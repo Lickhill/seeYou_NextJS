@@ -407,22 +407,6 @@ export default function PeoplePage() {
 								Connecting souls since 2024
 							</p>
 						</div>
-						<div className="flex gap-6">
-							{[
-								"twitter",
-								"instagram",
-								"facebook",
-								"linkedin",
-							].map((social) => (
-								<a
-									key={social}
-									href="#"
-									className="text-violet-400 hover:text-violet-300 transition-all duration-300 hover:scale-125"
-								>
-									<span className="text-xl">📱</span>
-								</a>
-							))}
-						</div>
 					</div>
 					<div className="mt-8 text-center text-violet-500 text-sm">
 						<p>© 2024 SeeYou App. All rights reserved.</p>
