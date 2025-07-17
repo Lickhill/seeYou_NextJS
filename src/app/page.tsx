@@ -2,34 +2,38 @@
 
 import { SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 export default function Home() {
-	const { user, isLoaded } = useUser();
+	const { isLoaded, isSignedIn, user } = useUser();
 	const router = useRouter();
 	const [checking, setChecking] = useState(false);
 
-	useEffect(() => {
-		if (isLoaded && user?.id && !checking) {
-			checkUserInDatabase();
-		}
-	}, [isLoaded, user?.id]);
+	const checkUserInDatabase = useCallback(async () => {
+		if (!user?.id) return;
 
-	const checkUserInDatabase = async () => {
-		setChecking(true);
 		try {
-			const response = await fetch(`/api/user-check?clerkId=${user?.id}`);
+			setChecking(true);
+			const response = await fetch(`/api/user-check?clerkId=${user.id}`);
 			const data = await response.json();
 
 			if (data.exists) {
 				router.push("/people");
+			} else {
+				router.push("/complete-profile");
 			}
 		} catch (error) {
 			console.error("Error checking user:", error);
 		} finally {
 			setChecking(false);
 		}
-	};
+	}, [user?.id, router]);
+
+	useEffect(() => {
+		if (isLoaded && isSignedIn && user?.id && !checking) {
+			checkUserInDatabase();
+		}
+	}, [isLoaded, isSignedIn, user?.id, checking, checkUserInDatabase]);
 
 	if (!isLoaded || checking) {
 		return (

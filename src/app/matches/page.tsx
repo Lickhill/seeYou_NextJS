@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useUser, UserButton } from "@clerk/nextjs";
 import { UserProfile } from "@/models/User";
+import Image from "next/image";
 
 export default function MatchesPage() {
 	const { user } = useUser();
@@ -10,17 +11,13 @@ export default function MatchesPage() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
-	useEffect(() => {
-		if (user?.id) {
-			fetchMatches();
-		}
-	}, [user?.id]);
+	const fetchMatches = useCallback(async () => {
+		if (!user?.id) return;
 
-	const fetchMatches = async () => {
 		try {
 			setLoading(true);
 			const response = await fetch(
-				`/api/matches?currentUserId=${user?.id}`
+				`/api/matches?currentUserId=${user.id}`
 			);
 
 			if (!response.ok) {
@@ -35,7 +32,13 @@ export default function MatchesPage() {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, [user?.id]);
+
+	useEffect(() => {
+		if (user?.id) {
+			fetchMatches();
+		}
+	}, [user?.id, fetchMatches]);
 
 	if (loading) {
 		return (
@@ -127,9 +130,11 @@ export default function MatchesPage() {
 
 									{/* Profile Photo */}
 									{match.photoUrl ? (
-										<img
+										<Image
 											src={match.photoUrl}
-											alt={`${match.name}'s profile`}
+											alt={`${match.name}&apos;s profile`}
+											width={96}
+											height={96}
 											className="w-24 h-24 rounded-full mx-auto object-cover border-4 border-pink-300 group-hover:border-rose-300 transition-all duration-300"
 										/>
 									) : (

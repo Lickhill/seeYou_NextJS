@@ -1,30 +1,42 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useUser, UserButton } from "@clerk/nextjs";
 import { UserProfile } from "@/models/User";
+import Image from "next/image";
+
+interface CurrentUserProfile {
+	name: string;
+	lastName?: string;
+	photoUrl?: string;
+	likes: string[];
+	matches: string[];
+}
+
+interface MatchedUser {
+	clerkId: string;
+	name: string;
+	lastName?: string;
+	photoUrl?: string;
+}
 
 export default function PeoplePage() {
 	const { user } = useUser();
 	const [users, setUsers] = useState<UserProfile[]>([]);
-	const [currentUserProfile, setCurrentUserProfile] = useState<any>(null);
+	const [currentUserProfile, setCurrentUserProfile] =
+		useState<CurrentUserProfile | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [likedUsers, setLikedUsers] = useState<string[]>([]);
 	const [showMatchModal, setShowMatchModal] = useState(false);
-	const [matchedUser, setMatchedUser] = useState<any>(null);
+	const [matchedUser, setMatchedUser] = useState<MatchedUser | null>(null);
 	const [matchesCount, setMatchesCount] = useState(0);
 
-	useEffect(() => {
-		if (user?.id) {
-			fetchUsers();
-			fetchCurrentUserProfile();
-		}
-	}, [user?.id]);
+	const fetchCurrentUserProfile = useCallback(async () => {
+		if (!user?.id) return;
 
-	const fetchCurrentUserProfile = async () => {
 		try {
-			const response = await fetch(`/api/user-check?clerkId=${user?.id}`);
+			const response = await fetch(`/api/user-check?clerkId=${user.id}`);
 			const data = await response.json();
 			if (data.user) {
 				setCurrentUserProfile(data.user);
@@ -34,13 +46,15 @@ export default function PeoplePage() {
 		} catch (err) {
 			console.error("Error fetching current user profile:", err);
 		}
-	};
+	}, [user?.id]);
 
-	const fetchUsers = async () => {
+	const fetchUsers = useCallback(async () => {
+		if (!user?.id) return;
+
 		try {
 			setLoading(true);
 			const response = await fetch(
-				`/api/profile?currentUserId=${user?.id}`
+				`/api/profile?currentUserId=${user.id}`
 			);
 
 			if (!response.ok) {
@@ -55,7 +69,14 @@ export default function PeoplePage() {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, [user?.id]);
+
+	useEffect(() => {
+		if (user?.id) {
+			fetchUsers();
+			fetchCurrentUserProfile();
+		}
+	}, [user?.id, fetchUsers, fetchCurrentUserProfile]);
 
 	const handleLike = async (likedUserId: string) => {
 		try {
@@ -73,17 +94,17 @@ export default function PeoplePage() {
 			const data = await response.json();
 
 			if (data.success) {
-				// Update local liked users state
 				setLikedUsers((prev) => [...prev, likedUserId]);
 
-				// If it's a match, show modal and update matches count
 				if (data.isMatch) {
 					const matchedUserData = users.find(
 						(u) => u.clerkId === likedUserId
 					);
-					setMatchedUser(matchedUserData);
-					setShowMatchModal(true);
-					setMatchesCount((prev) => prev + 1);
+					if (matchedUserData) {
+						setMatchedUser(matchedUserData);
+						setShowMatchModal(true);
+						setMatchesCount((prev) => prev + 1);
+					}
 				}
 			}
 		} catch (error) {
@@ -131,9 +152,11 @@ export default function PeoplePage() {
 						<div className="flex items-center gap-4">
 							{currentUserProfile?.photoUrl ? (
 								<div className="w-16 h-16 rounded-full overflow-hidden border-2 border-violet-400 pulse-violet">
-									<img
+									<Image
 										src={currentUserProfile.photoUrl}
 										alt="Your profile"
+										width={64}
+										height={64}
 										className="w-full h-full object-cover"
 									/>
 								</div>
@@ -246,9 +269,11 @@ export default function PeoplePage() {
 								{/* Profile Photo */}
 								<div className="mb-6">
 									{person.photoUrl ? (
-										<img
+										<Image
 											src={person.photoUrl}
-											alt={`${person.name}'s profile`}
+											alt={`${person.name}&apos;s profile`}
+											width={112}
+											height={112}
 											className="w-28 h-28 rounded-full mx-auto object-cover border-3 border-violet-400"
 										/>
 									) : (
@@ -315,15 +340,17 @@ export default function PeoplePage() {
 
 						<div className="relative z-10">
 							<h2 className="text-3xl font-bold gradient-text mb-6">
-								✨ It's a Match! ✨
+								✨ It&apos;s a Match! ✨
 							</h2>
 							<div className="flex justify-center mb-6">
 								<div className="relative">
 									{/* Current user */}
 									{currentUserProfile?.photoUrl ? (
-										<img
+										<Image
 											src={currentUserProfile.photoUrl}
 											alt="Your profile"
+											width={80}
+											height={80}
 											className="w-20 h-20 rounded-full object-cover border-4 border-pink-400"
 										/>
 									) : (
@@ -341,9 +368,11 @@ export default function PeoplePage() {
 
 									{/* Matched user */}
 									{matchedUser.photoUrl ? (
-										<img
+										<Image
 											src={matchedUser.photoUrl}
 											alt={matchedUser.name}
+											width={80}
+											height={80}
 											className="w-20 h-20 rounded-full object-cover border-4 border-violet-400 absolute left-16"
 										/>
 									) : (

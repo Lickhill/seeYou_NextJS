@@ -1,14 +1,30 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useUser } from "@clerk/nextjs";
 import { CldUploadWidget } from "next-cloudinary";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+
+interface CloudinaryResult {
+	event: string;
+	info: {
+		secure_url: string;
+	};
+}
+
+interface UserProfileData {
+	name: string;
+	lastName: string;
+	phone: string;
+	instagramId: string;
+	photoUrl: string;
+}
 
 export default function CompleteProfile() {
 	const { user } = useUser();
 	const router = useRouter();
-	const [formData, setFormData] = useState({
+	const [formData, setFormData] = useState<UserProfileData>({
 		name: "",
 		lastName: "",
 		phone: "",
@@ -19,16 +35,12 @@ export default function CompleteProfile() {
 	const [photoUploading, setPhotoUploading] = useState(false);
 	const [fetchingProfile, setFetchingProfile] = useState(true);
 
-	useEffect(() => {
-		if (user?.id) {
-			fetchUserProfile();
-		}
-	}, [user?.id]);
+	const fetchUserProfile = useCallback(async () => {
+		if (!user?.id) return;
 
-	const fetchUserProfile = async () => {
 		try {
 			setFetchingProfile(true);
-			const response = await fetch(`/api/user-check?clerkId=${user?.id}`);
+			const response = await fetch(`/api/user-check?clerkId=${user.id}`);
 			const data = await response.json();
 
 			if (data.exists && data.user) {
@@ -45,7 +57,13 @@ export default function CompleteProfile() {
 		} finally {
 			setFetchingProfile(false);
 		}
-	};
+	}, [user?.id]);
+
+	useEffect(() => {
+		if (user?.id) {
+			fetchUserProfile();
+		}
+	}, [user?.id, fetchUserProfile]);
 
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
@@ -53,17 +71,6 @@ export default function CompleteProfile() {
 			...prev,
 			[name]: value,
 		}));
-	};
-
-	const handlePhotoUpload = (result: any) => {
-		console.log("Upload result:", result); // Add this for debugging
-		if (result.event === "success") {
-			setFormData((prev) => ({
-				...prev,
-				photoUrl: result.info.secure_url,
-			}));
-			setPhotoUploading(false);
-		}
 	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -113,8 +120,8 @@ export default function CompleteProfile() {
 	}
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-violet-950 via-purple-900 to-black py-6 sm:py-12 futuristic-grid">
-			<div className="max-w-2xl mx-auto px-4 sm:px-6">
+		<div className="min-h-screen bg-gradient-to-br from-violet-950 via-purple-900 to-black py-6 sm:py-12 flex flex-col">
+			<div className="max-w-2xl mx-auto px-4 sm:px-6 flex-1">
 				<div className="glass-card p-6 sm:p-8 rounded-2xl">
 					<h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-2">
 						Complete Your Profile
@@ -131,9 +138,11 @@ export default function CompleteProfile() {
 						<div className="text-center">
 							<div className="mb-4">
 								{formData.photoUrl ? (
-									<img
+									<Image
 										src={formData.photoUrl}
 										alt="Profile"
+										width={128}
+										height={128}
 										className="w-24 sm:w-32 h-24 sm:h-32 rounded-full mx-auto object-cover border-4 border-violet-400"
 									/>
 								) : (
@@ -163,14 +172,14 @@ export default function CompleteProfile() {
 									multiple: false,
 									resourceType: "image",
 								}}
-								onSuccess={(result: any) => {
+								onSuccess={(result: CloudinaryResult) => {
 									setFormData((prev) => ({
 										...prev,
 										photoUrl: result.info.secure_url,
 									}));
 									setPhotoUploading(false);
 								}}
-								onError={(error: any) => {
+								onError={(error: Error) => {
 									console.error("Upload error:", error);
 									setPhotoUploading(false);
 									alert("Upload failed. Please try again.");
