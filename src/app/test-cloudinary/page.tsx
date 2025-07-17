@@ -3,8 +3,8 @@
 import { CldUploadWidget } from "next-cloudinary";
 
 interface CloudinaryResult {
-	event: string;
-	info: {
+	event?: string;
+	info?: {
 		secure_url: string;
 	};
 }
@@ -19,7 +19,9 @@ export default function TestCloudinary() {
 				uploadPreset="seeyouprofiles"
 				onSuccess={(result: CloudinaryResult) => {
 					console.log("Success:", result);
-					alert("Upload successful!");
+					if (result.info?.secure_url) {
+						alert("Upload successful!");
+					}
 				}}
 				onError={(error: Error) => {
 					console.error("Error:", error);

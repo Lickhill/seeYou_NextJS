@@ -7,8 +7,8 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 interface CloudinaryResult {
-	event: string;
-	info: {
+	event?: string;
+	info?: {
 		secure_url: string;
 	};
 }
@@ -173,10 +173,12 @@ export default function CompleteProfile() {
 									resourceType: "image",
 								}}
 								onSuccess={(result: CloudinaryResult) => {
-									setFormData((prev) => ({
-										...prev,
-										photoUrl: result.info.secure_url,
-									}));
+									if (result.info?.secure_url) {
+										setFormData((prev) => ({
+											...prev,
+											photoUrl: result.info.secure_url,
+										}));
+									}
 									setPhotoUploading(false);
 								}}
 								onError={(error: Error) => {
