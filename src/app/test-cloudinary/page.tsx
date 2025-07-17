@@ -38,3 +38,5 @@ export default function TestCloudinary() {
 		</div>
 	);
 }
+
+// This file can be deleted or moved to prevent deployment issues
