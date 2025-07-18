@@ -8,9 +8,10 @@ export default function Home() {
 	const { isLoaded, isSignedIn, user } = useUser();
 	const router = useRouter();
 	const [checking, setChecking] = useState(false);
+	const [hasChecked, setHasChecked] = useState(false);
 
 	const checkUserInDatabase = useCallback(async () => {
-		if (!user?.id) return;
+		if (!user?.id || checking || hasChecked) return;
 
 		try {
 			setChecking(true);
@@ -26,21 +27,31 @@ export default function Home() {
 			console.error("Error checking user:", error);
 		} finally {
 			setChecking(false);
+			setHasChecked(true);
 		}
-	}, [user?.id, router]);
+	}, [user?.id, router, checking, hasChecked]);
 
 	useEffect(() => {
-		if (isLoaded && isSignedIn && user?.id && !checking) {
+		if (isLoaded && isSignedIn && user?.id && !checking && !hasChecked) {
 			checkUserInDatabase();
 		}
-	}, [isLoaded, isSignedIn, user?.id, checking, checkUserInDatabase]);
+	}, [
+		isLoaded,
+		isSignedIn,
+		user?.id,
+		checkUserInDatabase,
+		checking,
+		hasChecked,
+	]);
 
 	if (!isLoaded || checking) {
 		return (
-			<div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+			<div className="min-h-screen bg-gradient-to-br from-violet-950 via-purple-900 to-black flex items-center justify-center">
 				<div className="text-center">
-					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-					<p className="text-gray-600">Loading...</p>
+					<div className="animate-spin rounded-full h-16 w-16 border-t-4 border-violet-400 mx-auto mb-6"></div>
+					<p className="text-violet-300 text-lg font-medium">
+						Loading...
+					</p>
 				</div>
 			</div>
 		);

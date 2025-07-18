@@ -171,6 +171,34 @@ export default function CompleteProfile() {
 									sources: ["local", "camera"],
 									multiple: false,
 									resourceType: "image",
+									clientAllowedFormats: [
+										"jpg",
+										"jpeg",
+										"png",
+										"gif",
+										"webp",
+									],
+									cropping: false,
+									showAdvancedOptions: false,
+									showCompletedButton: true,
+									showUploadMoreButton: false,
+									styles: {
+										palette: {
+											window: "#FFFFFF",
+											windowBorder: "#90A0B3",
+											tabIcon: "#8B5CF6",
+											menuIcons: "#5A616A",
+											textDark: "#000000",
+											textLight: "#FFFFFF",
+											link: "#8B5CF6",
+											action: "#8B5CF6",
+											inactiveTabIcon: "#0E2F5A",
+											error: "#F44235",
+											inProgress: "#0078FF",
+											complete: "#20B832",
+											sourceBg: "#E4EBF1",
+										},
+									},
 								}}
 								onSuccess={(result: CloudinaryResult) => {
 									if (result.info?.secure_url) {

@@ -17,6 +17,13 @@ export default function TestCloudinary() {
 
 			<CldUploadWidget
 				uploadPreset="seeyouprofiles"
+				options={{
+					clientAllowedFormats: ["jpg", "jpeg", "png", "gif", "webp"],
+					maxFileSize: 10000000,
+					showAdvancedOptions: false,
+					showCompletedButton: true,
+					showUploadMoreButton: false,
+				}}
 				onSuccess={(result: CloudinaryResult) => {
 					console.log("Success:", result);
 					if (result.info?.secure_url) {
