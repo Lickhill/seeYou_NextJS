@@ -6,13 +6,6 @@ import { CldUploadWidget } from "next-cloudinary";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
-interface CloudinaryResult {
-	event?: string;
-	info?: {
-		secure_url: string;
-	};
-}
-
 interface UserProfileData {
 	name: string;
 	lastName: string;
@@ -182,26 +175,10 @@ export default function CompleteProfile() {
 									showAdvancedOptions: false,
 									showCompletedButton: true,
 									showUploadMoreButton: false,
-									styles: {
-										palette: {
-											window: "#FFFFFF",
-											windowBorder: "#90A0B3",
-											tabIcon: "#8B5CF6",
-											menuIcons: "#5A616A",
-											textDark: "#000000",
-											textLight: "#FFFFFF",
-											link: "#8B5CF6",
-											action: "#8B5CF6",
-											inactiveTabIcon: "#0E2F5A",
-											error: "#F44235",
-											inProgress: "#0078FF",
-											complete: "#20B832",
-											sourceBg: "#E4EBF1",
-										},
-									},
 								}}
-								onSuccess={(result: CloudinaryResult) => {
-									if (result.info?.secure_url) {
+								onSuccess={(result: any) => {
+									console.log("Upload success:", result);
+									if (result?.info?.secure_url) {
 										setFormData((prev) => ({
 											...prev,
 											photoUrl: result.info.secure_url,
@@ -209,7 +186,7 @@ export default function CompleteProfile() {
 									}
 									setPhotoUploading(false);
 								}}
-								onError={(error: Error) => {
+								onError={(error: any) => {
 									console.error("Upload error:", error);
 									setPhotoUploading(false);
 									alert("Upload failed. Please try again.");
