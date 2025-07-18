@@ -176,17 +176,20 @@ export default function CompleteProfile() {
 									showCompletedButton: true,
 									showUploadMoreButton: false,
 								}}
-								onSuccess={(result: any) => {
+								onSuccess={(result) => {
 									console.log("Upload success:", result);
-									if (result?.info?.secure_url) {
+									// eslint-disable-next-line @typescript-eslint/no-explicit-any
+									if ((result as any)?.info?.secure_url) {
 										setFormData((prev) => ({
 											...prev,
-											photoUrl: result.info.secure_url,
+											// eslint-disable-next-line @typescript-eslint/no-explicit-any
+											photoUrl: (result as any).info
+												.secure_url,
 										}));
 									}
 									setPhotoUploading(false);
 								}}
-								onError={(error: any) => {
+								onError={(error) => {
 									console.error("Upload error:", error);
 									setPhotoUploading(false);
 									alert("Upload failed. Please try again.");
