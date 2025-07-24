@@ -19,8 +19,8 @@ export default function CancellationRefund() {
               <ol className="list-decimal pl-6 space-y-2 text-green-700">
                 <li>Log into your SeeYou account</li>
                 <li>Go to Account Settings</li>
-                <li>Select "Subscription Management"</li>
-                <li>Click "Cancel Subscription"</li>
+                <li>Select &ldquo;Subscription Management&rdquo;</li>
+                <li>Click &ldquo;Cancel Subscription&rdquo;</li>
                 <li>Follow the confirmation prompts</li>
               </ol>
             </div>
@@ -135,12 +135,12 @@ export default function CancellationRefund() {
           <section>
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">Free Trial Cancellation</h2>
             <p className="text-gray-600 mb-4">
-              If you're on a free trial, you can cancel anytime during the trial period without being charged. 
+              If you&apos;re on a free trial, you can cancel anytime during the trial period without being charged. 
               Make sure to cancel at least 24 hours before the trial ends to avoid automatic billing.
             </p>
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <p className="text-green-800">
-                <strong>Tip:</strong> Set a reminder to cancel your trial if you don't want to continue with a paid subscription.
+                <strong>Tip:</strong> Set a reminder to cancel your trial if you don&apos;t want to continue with a paid subscription.
               </p>
             </div>
           </section>

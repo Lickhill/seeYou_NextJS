@@ -193,7 +193,7 @@ export default function PrivacyPolicy() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">9. Children's Privacy</h2>
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">9. Children&apos;s Privacy</h2>
             <div className="bg-red-50 border border-red-200 rounded-lg p-6">
               <p className="text-red-800 font-semibold mb-2">Age Restriction</p>
               <p className="text-red-700">
@@ -214,7 +214,7 @@ export default function PrivacyPolicy() {
           <section>
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">11. Changes to This Policy</h2>
             <p className="text-gray-600">
-              We may update this Privacy Policy from time to time. We'll notify you of significant changes through the app 
+              We may update this Privacy Policy from time to time. We&apos;ll notify you of significant changes through the app 
               or by email. Your continued use of SeeYou after changes indicates your acceptance of the updated policy.
             </p>
           </section>

@@ -108,7 +108,7 @@ export default function TermsAndConditions() {
                 <li>Tell friends or family about your plans</li>
                 <li>Trust your instincts and report suspicious behavior</li>
                 <li>Never send money or provide financial information</li>
-                <li>Use SeeYou's in-app messaging until you feel safe</li>
+                <li>Use SeeYou&apos;s in-app messaging until you feel safe</li>
               </ul>
             </div>
           </section>
@@ -116,7 +116,7 @@ export default function TermsAndConditions() {
           <section>
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">8. Disclaimers and Limitations</h2>
             <p className="text-gray-600 mb-4">
-              SeeYou is provided "as is" without any warranties. We do not guarantee matches, relationships, or outcomes. 
+              SeeYou is provided &ldquo;as is&rdquo; without any warranties. We do not guarantee matches, relationships, or outcomes. 
               We are not responsible for the actions of other users or any interactions that occur outside our platform.
             </p>
           </section>
