@@ -63,7 +63,7 @@ export default function CancellationRefund() {
                   <div className="bg-pink-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">1</div>
                   <div>
                     <h4 className="font-semibold text-gray-800">Request Submitted</h4>
-                    <p className="text-gray-600">We'll acknowledge your refund request within 24 hours</p>
+                    <p className="text-gray-600">We&apos;ll acknowledge your refund request within 24 hours</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4">

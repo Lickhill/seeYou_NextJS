@@ -98,12 +98,12 @@ export default function ShippingPolicy() {
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">Privacy & Discretion</h2>
             <p className="text-gray-600 mb-4">
               We understand the importance of privacy in dating. All packages are shipped in discreet packaging 
-              without any external branding that indicates the nature of our service. Only the recipient's information 
+              without any external branding that indicates the nature of our service. Only the recipient&apos;s information 
               is visible on the package.
             </p>
           </section>
 
-          <section className="mb-8">
+          <section>
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">Contact Us</h2>
             <p className="text-gray-600">
               For questions about your order or shipping, please contact our support team at 
