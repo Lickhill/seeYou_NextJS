@@ -104,3 +104,37 @@ export async function POST(request: NextRequest) {
 		);
 	}
 }
+
+export async function PATCH(request: NextRequest) {
+	try {
+		const body = await request.json();
+		const { clerkId, revealMatchId } = body;
+
+		if (!clerkId || !revealMatchId) {
+			return NextResponse.json(
+				{ error: "clerkId and revealMatchId are required" },
+				{ status: 400 }
+			);
+		}
+
+		const client = await clientPromise;
+		const db = client.db("seeyou");
+		const collection = db.collection<UserProfile>("users");
+
+		await collection.updateOne(
+			{ clerkId },
+			{
+				$addToSet: { revealed: revealMatchId },
+				$set: { updatedAt: new Date() },
+			}
+		);
+
+		return NextResponse.json({ success: true });
+	} catch (error) {
+		console.error("Error updating revealed matches:", error);
+		return NextResponse.json(
+			{ error: "Internal server error" },
+			{ status: 500 }
+		);
+	}
+}

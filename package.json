@@ -18,7 +18,8 @@
     "next-cloudinary": "^6.16.0",
     "razorpay": "^2.9.6",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "repomix": "^1.2.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

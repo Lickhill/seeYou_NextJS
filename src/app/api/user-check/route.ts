@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
 						instagramId: user.instagramId,
 						likes: user.likes || [],
 						matches: user.matches || [],
+						revealed: user.revealed || [],
 				  }
 				: null,
 		});

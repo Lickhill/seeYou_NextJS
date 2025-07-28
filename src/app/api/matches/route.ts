@@ -18,19 +18,44 @@ export async function GET(request: NextRequest) {
 		const db = client.db("seeyou");
 		const collection = db.collection<UserProfile>("users");
 
-		// Get current user's matches array
+		// Get current user's matches and revealed arrays
 		const currentUser = await collection.findOne({
 			clerkId: currentUserId,
 		});
 
-		if (!currentUser || !currentUser.matches) {
+		if (
+			!currentUser ||
+			!currentUser.matches ||
+			!Array.isArray(currentUser.matches)
+		) {
 			return NextResponse.json({ matches: [] });
 		}
 
-		// Fetch full profile details of matched users
+		const revealed = Array.isArray(currentUser.revealed)
+			? currentUser.revealed
+			: [];
+
+		// Always reveal the first match (if exists)
+		const alwaysRevealedIds = [];
+		if (currentUser.matches.length > 0) {
+			alwaysRevealedIds.push(currentUser.matches[0]);
+		}
+
+		// Add revealed matches (avoid duplicates)
+		const revealedIds = revealed.filter(
+			(id) => !alwaysRevealedIds.includes(id)
+		);
+
+		const toRevealIds = [...alwaysRevealedIds, ...revealedIds];
+
+		if (toRevealIds.length === 0) {
+			return NextResponse.json({ matches: [] });
+		}
+
+		// Fetch only the revealed matches and the first match
 		const matchedUsers = await collection
 			.find(
-				{ clerkId: { $in: currentUser.matches } },
+				{ clerkId: { $in: toRevealIds } },
 				{
 					projection: {
 						clerkId: 1,
