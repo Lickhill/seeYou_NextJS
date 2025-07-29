@@ -3,6 +3,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import Razorpay from "razorpay";
 
+// Define a type for the expected Razorpay error structure for better type safety.
+interface RazorpayError {
+	error?: {
+		description?: string;
+	};
+	message?: string;
+}
+
 export async function POST(request: NextRequest) {
 	// --- Enhanced Debugging ---
 	// This will show in your terminal. If you see "MISSING", your .env.local file is not working.
@@ -77,23 +85,27 @@ export async function POST(request: NextRequest) {
 			amount: order.amount,
 			key: razorpayKeyId,
 		});
-	} catch (error: any) {
+	} catch (error: unknown) {
+		// Changed 'any' to 'unknown' for better type safety
 		// --- This is the most important part for debugging ---
 		console.error("--- FULL ERROR OBJECT FROM RAZORPAY ---");
 		console.error(error);
 		console.error("---------------------------------------");
 
+		// Type guard to safely access nested properties
+		const razorpayError = error as RazorpayError;
+
 		// Razorpay often nests the real error description. Let's log it if it exists.
-		if (error.error && error.error.description) {
+		if (razorpayError.error?.description) {
 			console.error(
 				"Razorpay Error Description:",
-				error.error.description
+				razorpayError.error.description
 			);
 		}
 
 		const errorMessage =
-			error.error?.description ||
-			error.message ||
+			razorpayError.error?.description ||
+			razorpayError.message ||
 			"An unknown error occurred on the server.";
 
 		return NextResponse.json(
