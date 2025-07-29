@@ -14,6 +14,12 @@ interface UserProfileData {
 	photoUrl: string;
 }
 
+interface CloudinaryResult {
+	info?: {
+		secure_url: string;
+	};
+}
+
 export default function CompleteProfile() {
 	const { user } = useUser();
 	const router = useRouter();
@@ -45,7 +51,7 @@ export default function CompleteProfile() {
 					photoUrl: data.user.photoUrl || "",
 				});
 			}
-		} catch (error) {
+		} catch (error: unknown) {
 			console.error("Error fetching user profile:", error);
 		} finally {
 			setFetchingProfile(false);
@@ -91,7 +97,7 @@ export default function CompleteProfile() {
 			} else {
 				throw new Error("Failed to save profile");
 			}
-		} catch (error) {
+		} catch (error: unknown) {
 			console.error("Error saving profile:", error);
 			alert("Error saving profile. Please try again.");
 		} finally {
@@ -176,20 +182,17 @@ export default function CompleteProfile() {
 									showCompletedButton: true,
 									showUploadMoreButton: false,
 								}}
-								onSuccess={(result) => {
+								onSuccess={(result: CloudinaryResult) => {
 									console.log("Upload success:", result);
-									// eslint-disable-next-line @typescript-eslint/no-explicit-any
-									if ((result as any)?.info?.secure_url) {
+									if (result?.info?.secure_url) {
 										setFormData((prev) => ({
 											...prev,
-											// eslint-disable-next-line @typescript-eslint/no-explicit-any
-											photoUrl: (result as any).info
-												.secure_url,
+											photoUrl: result.info!.secure_url,
 										}));
 									}
 									setPhotoUploading(false);
 								}}
-								onError={(error) => {
+								onError={(error: unknown) => {
 									console.error("Upload error:", error);
 									setPhotoUploading(false);
 									alert("Upload failed. Please try again.");

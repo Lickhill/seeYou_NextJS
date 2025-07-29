@@ -23,7 +23,7 @@ export default function Home() {
 			} else {
 				router.push("/complete-profile");
 			}
-		} catch (error) {
+		} catch (error: unknown) {
 			console.error("Error checking user:", error);
 		} finally {
 			setChecking(false);

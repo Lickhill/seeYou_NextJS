@@ -43,7 +43,7 @@ export default function PeoplePage() {
 				setLikedUsers(data.user.likes || []);
 				setMatchesCount(data.user.matches?.length || 0);
 			}
-		} catch (err) {
+		} catch (err: unknown) {
 			console.error("Error fetching current user profile:", err);
 		}
 	}, [user?.id]);
@@ -63,7 +63,7 @@ export default function PeoplePage() {
 
 			const data = await response.json();
 			setUsers(data.users);
-		} catch (err) {
+		} catch (err: unknown) {
 			console.error("Error fetching users:", err);
 			setError("Failed to load people. Please try again.");
 		} finally {
@@ -107,7 +107,7 @@ export default function PeoplePage() {
 					}
 				}
 			}
-		} catch (error) {
+		} catch (error: unknown) {
 			console.error("Error liking user:", error);
 			alert("Failed to like user. Please try again.");
 		}

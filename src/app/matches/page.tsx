@@ -6,6 +6,41 @@ import { UserProfile } from "@/models/User";
 import Image from "next/image";
 import Script from "next/script";
 
+// --- Type Definitions ---
+interface RazorpayResponse {
+	razorpay_order_id: string;
+	razorpay_payment_id: string;
+	razorpay_signature: string;
+}
+
+interface RazorpayOptions {
+	key: string;
+	amount: number;
+	currency: string;
+	name: string;
+	description: string;
+	order_id: string;
+	handler: (response: RazorpayResponse) => void;
+	prefill: {
+		name: string;
+		email: string;
+	};
+	theme: {
+		color: string;
+	};
+	modal: {
+		ondismiss: () => void;
+	};
+}
+
+declare global {
+	interface Window {
+		Razorpay: new (options: RazorpayOptions) => {
+			open: () => void;
+		};
+	}
+}
+
 // --- SVG Icon Components for better reusability ---
 
 const HeartIcon = () => (
@@ -258,11 +293,13 @@ export default function MatchesPage() {
 			setMatches(matchesData.matches || []);
 			setAllMatchIds(userData.user?.matches || []);
 			setRevealedMatches(userData.user?.revealed || []);
-		} catch (err: any) {
+		} catch (err: unknown) {
 			console.error("Error fetching data:", err);
-			setError(
-				err.message || "Failed to load matches. Please try again."
-			);
+			const errorMessage =
+				err instanceof Error
+					? err.message
+					: "Failed to load matches. Please try again.";
+			setError(errorMessage);
 		} finally {
 			setLoading(false);
 		}
@@ -305,17 +342,17 @@ export default function MatchesPage() {
 			const orderData = await orderResponse.json();
 			if (!orderData.orderId)
 				throw new Error("Order ID not received from server");
-			if (typeof window === "undefined" || !(window as any).Razorpay)
+			if (typeof window === "undefined" || !window.Razorpay)
 				throw new Error("Razorpay script not loaded.");
 
-			const options = {
+			const options: RazorpayOptions = {
 				key: orderData.key,
 				amount: orderData.amount,
 				currency: orderData.currency,
 				name: "SeeYou",
 				description: `Reveal your match`,
 				order_id: orderData.orderId,
-				handler: async (response: any) => {
+				handler: async (response: RazorpayResponse) => {
 					try {
 						const verifyResponse = await fetch(
 							"/api/payment/verify",
@@ -344,10 +381,14 @@ export default function MatchesPage() {
 									"Payment verification failed"
 							);
 						}
-					} catch (error: any) {
+					} catch (error: unknown) {
 						console.error("Payment verification error:", error);
+						const errorMessage =
+							error instanceof Error
+								? error.message
+								: "Unknown error occurred";
 						alert(
-							`Verification Failed: ${error.message}. Please contact support.`
+							`Verification Failed: ${errorMessage}. Please contact support.`
 						);
 					} finally {
 						setPaymentLoading(null);
@@ -363,11 +404,15 @@ export default function MatchesPage() {
 				},
 			};
 
-			const rzp = new (window as any).Razorpay(options);
+			const rzp = new window.Razorpay(options);
 			rzp.open();
-		} catch (error: any) {
+		} catch (error: unknown) {
 			console.error("Payment initiation error:", error);
-			alert(`Payment Failed: ${error.message}`);
+			const errorMessage =
+				error instanceof Error
+					? error.message
+					: "Unknown error occurred";
+			alert(`Payment Failed: ${errorMessage}`);
 			setPaymentLoading(null);
 		}
 	};
