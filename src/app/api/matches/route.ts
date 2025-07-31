@@ -1,3 +1,5 @@
+// File: src/app/api/matches/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { UserProfile } from "@/models/User";
@@ -18,7 +20,7 @@ export async function GET(request: NextRequest) {
 		const db = client.db("seeyou");
 		const collection = db.collection<UserProfile>("users");
 
-		// Get current user's matches and revealed arrays
+		// Get current user's matches and revealedMatches arrays
 		const currentUser = await collection.findOne({
 			clerkId: currentUserId,
 		});
@@ -31,19 +33,20 @@ export async function GET(request: NextRequest) {
 			return NextResponse.json({ matches: [] });
 		}
 
-		const revealed = Array.isArray(currentUser.revealed)
-			? currentUser.revealed
+		// Correctly access the revealedMatches property
+		const revealed: string[] = Array.isArray(currentUser.revealedMatches)
+			? currentUser.revealedMatches
 			: [];
 
-		// Always reveal the first match (if exists)
-		const alwaysRevealedIds = [];
+		// Explicitly type the array
+		const alwaysRevealedIds: string[] = [];
 		if (currentUser.matches.length > 0) {
 			alwaysRevealedIds.push(currentUser.matches[0]);
 		}
 
-		// Add revealed matches (avoid duplicates)
-		const revealedIds = revealed.filter(
-			(id) => !alwaysRevealedIds.includes(id)
+		// Explicitly type the 'id' parameter in the filter callback
+		const revealedIds: string[] = revealed.filter(
+			(id: string) => !alwaysRevealedIds.includes(id)
 		);
 
 		const toRevealIds = [...alwaysRevealedIds, ...revealedIds];
