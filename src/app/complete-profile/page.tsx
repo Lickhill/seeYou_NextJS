@@ -182,12 +182,20 @@ export default function CompleteProfile() {
 									showCompletedButton: true,
 									showUploadMoreButton: false,
 								}}
-								onSuccess={(result: CloudinaryResult) => {
-									console.log("Upload success:", result);
-									if (result?.info?.secure_url) {
+								onSuccess={(results) => {
+									console.log("Upload success:", results);
+									// results.info can be a string or an object
+									const info = results?.info as
+										| { secure_url?: string }
+										| undefined;
+									if (
+										info &&
+										typeof info === "object" &&
+										info.secure_url
+									) {
 										setFormData((prev) => ({
 											...prev,
-											photoUrl: result.info!.secure_url,
+											photoUrl: info.secure_url!,
 										}));
 									}
 									setPhotoUploading(false);
