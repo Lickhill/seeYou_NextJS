@@ -1,6 +1,9 @@
+// File: src/app/api/payment/verify/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import clientPromise from "@/lib/mongodb";
+import { UserProfile } from "@/models/User"; // Import UserProfile to ensure types are correct
 
 export async function POST(request: NextRequest) {
 	try {
@@ -32,12 +35,13 @@ export async function POST(request: NextRequest) {
 		// Update user's revealed matches in database
 		const client = await clientPromise;
 		const db = client.db("seeyou");
-		const collection = db.collection("users");
+		const collection = db.collection<UserProfile>("users"); // Use UserProfile type here
 
 		await collection.updateOne(
 			{ clerkId: userId },
 			{
 				$addToSet: { revealedMatches: matchId },
+				// CORRECTED: The $push operator needs to be on the same level as other operators
 				$push: {
 					payments: {
 						matchId,
