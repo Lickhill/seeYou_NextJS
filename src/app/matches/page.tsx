@@ -132,7 +132,7 @@ const NoMatchesDisplay = () => (
 		</h3>
 		<p className="text-pink-600/80 mb-8 max-w-md mx-auto text-lg leading-relaxed">
 			Your perfect match is waiting to be discovered. Keep exploring and
-			spreading the love!
+			spreading the bond!
 		</p>
 		<a href="/people">
 			<button className="bg-gradient-to-r from-pink-500 via-rose-500 to-purple-500 hover:from-pink-600 hover:via-rose-600 hover:to-purple-600 text-white px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-xl">
@@ -527,7 +527,7 @@ export default function MatchesPage() {
 								SeeYou
 							</h3>
 							<p className="text-pink-600/70 font-light text-sm sm:text-base">
-								Where hearts connect and love stories begin ✨
+								Where hearts connect and stories begin ✨
 							</p>
 						</div>
 					</div>

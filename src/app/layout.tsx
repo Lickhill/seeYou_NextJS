@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-	title: "SeeYou - Dating App",
+	title: "SeeYou - Connecting App",
 	description: "Connect with amazing people",
 };
 

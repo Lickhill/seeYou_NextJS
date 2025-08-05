@@ -5,7 +5,7 @@ export default function Footer() {
 	return (
 		<footer className="glass-effect border-t border-violet-500/30 bg-gradient-to-br from-violet-950/80 via-purple-900/80 to-black/80 text-white backdrop-blur-md">
 			<div className="max-w-7xl mx-auto px-4 py-12">
-				<div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+				<div className="grid grid-cols-1 md:grid-cols-3 gap-8">
 					{/* Brand Section */}
 					<div className="space-y-4">
 						<h3 className="text-2xl font-bold gradient-text">
@@ -13,7 +13,7 @@ export default function Footer() {
 						</h3>
 						<p className="text-violet-200">
 							Find your perfect match and create meaningful
-							connections. Love is just a swipe away.
+							connections. Your date is just a swipe away.
 						</p>
 						<div className="flex space-x-4">
 							<a
@@ -67,55 +67,6 @@ export default function Footer() {
 						</div>
 					</div>
 
-					{/* Company Links */}
-					<div className="space-y-4">
-						<h4 className="text-lg font-semibold text-violet-200">
-							Company
-						</h4>
-						<ul className="space-y-2">
-							<li>
-								<Link
-									href="/about"
-									className="text-violet-300 hover:text-white transition-colors"
-								>
-									About Us
-								</Link>
-							</li>
-							<li>
-								<Link
-									href="/careers"
-									className="text-violet-300 hover:text-white transition-colors"
-								>
-									Careers
-								</Link>
-							</li>
-							<li>
-								<Link
-									href="/press"
-									className="text-violet-300 hover:text-white transition-colors"
-								>
-									Press
-								</Link>
-							</li>
-							<li>
-								<Link
-									href="/blog"
-									className="text-violet-300 hover:text-white transition-colors"
-								>
-									Blog
-								</Link>
-							</li>
-							<li>
-								<Link
-									href="/investors"
-									className="text-violet-300 hover:text-white transition-colors"
-								>
-									Investors
-								</Link>
-							</li>
-						</ul>
-					</div>
-
 					{/* Support Links */}
 					<div className="space-y-4">
 						<h4 className="text-lg font-semibold text-violet-200">
@@ -128,38 +79,6 @@ export default function Footer() {
 									className="text-violet-300 hover:text-white transition-colors"
 								>
 									Contact Us
-								</Link>
-							</li>
-							<li>
-								<Link
-									href="/help"
-									className="text-violet-300 hover:text-white transition-colors"
-								>
-									Help Center
-								</Link>
-							</li>
-							<li>
-								<Link
-									href="/safety"
-									className="text-violet-300 hover:text-white transition-colors"
-								>
-									Safety Tips
-								</Link>
-							</li>
-							<li>
-								<Link
-									href="/community"
-									className="text-violet-300 hover:text-white transition-colors"
-								>
-									Community Guidelines
-								</Link>
-							</li>
-							<li>
-								<Link
-									href="/feedback"
-									className="text-violet-300 hover:text-white transition-colors"
-								>
-									Feedback
 								</Link>
 							</li>
 						</ul>
@@ -201,14 +120,6 @@ export default function Footer() {
 									className="text-violet-300 hover:text-white transition-colors"
 								>
 									Shipping Policy
-								</Link>
-							</li>
-							<li>
-								<Link
-									href="/cookie-policy"
-									className="text-violet-300 hover:text-white transition-colors"
-								>
-									Cookie Policy
 								</Link>
 							</li>
 						</ul>
@@ -260,8 +171,8 @@ export default function Footer() {
 
 					<div className="text-center mt-6 text-violet-300 text-sm">
 						<p>
-							Made with ❤️ for people seeking love and meaningful
-							connections
+							Made with ❤️ for people seeking a match and
+							meaningful connections
 						</p>
 					</div>
 				</div>
