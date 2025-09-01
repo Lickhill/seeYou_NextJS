@@ -1,118 +1,93 @@
-// File: src/app/api/payment/create-order/route.ts
+// File: src/app/api/payment/create-order/route.ts (Corrected)
 
 import { NextRequest, NextResponse } from "next/server";
-import Razorpay from "razorpay";
-
-// Define a type for the expected Razorpay error structure for better type safety.
-interface RazorpayError {
-	error?: {
-		description?: string;
-	};
-	message?: string;
-}
+import crypto from "crypto";
+import { v4 as uuidv4 } from "uuid";
 
 export async function POST(request: NextRequest) {
-	// --- Enhanced Debugging ---
-	// This will show in your terminal. If you see "MISSING", your .env.local file is not working.
-	console.log("--- Checking Environment Variables ---");
-	console.log(
-		"RAZORPAY_KEY_ID:",
-		process.env.RAZORPAY_KEY_ID ? "Loaded" : "MISSING"
-	);
-	console.log(
-		"RAZORPAY_KEY_SECRET:",
-		process.env.RAZORPAY_KEY_SECRET ? "Loaded" : "MISSING"
-	);
-	console.log("------------------------------------");
+	const { amount, userId, matchId } = await request.json();
 
-	const razorpayKeyId = process.env.RAZORPAY_KEY_ID;
-	const razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET;
-
-	if (!razorpayKeyId || !razorpayKeySecret) {
-		console.error(
-			"CRITICAL: Razorpay API keys are not set in environment variables."
-		);
+	if (!amount || !userId || !matchId) {
 		return NextResponse.json(
-			{
-				error: "Payment gateway is not configured. API keys are missing on the server.",
-			},
+			{ error: "Amount, userId, and matchId are required." },
+			{ status: 400 }
+		);
+	}
+
+	const merchantId = process.env.PHONEPE_MERCHANT_ID;
+	const saltKey = process.env.PHONEPE_SALT_KEY;
+	const saltIndex = process.env.PHONEPE_SALT_INDEX;
+	const redirectUrl = process.env.NEXT_PUBLIC_PHONEPE_REDIRECT_URL;
+
+	if (!merchantId || !saltKey || !saltIndex || !redirectUrl) {
+		console.error("PhonePe environment variables are not set.");
+		return NextResponse.json(
+			{ error: "Payment gateway is not configured." },
 			{ status: 500 }
 		);
 	}
 
+	// --- FIX: Generate a transaction ID that is under 38 characters ---
+	// A UUID without hyphens is 32 characters long. "MUID-" + 32 = 37 characters.
+	const merchantTransactionId = `MUID-${uuidv4().replace(/-/g, "")}`;
+
+	const payload = {
+		merchantId,
+		merchantTransactionId,
+		merchantUserId: userId,
+		amount: amount * 100, // Amount in paise
+		redirectUrl: `${redirectUrl}?merchantTransactionId=${merchantTransactionId}`,
+		redirectMode: "REDIRECT",
+		callbackUrl: `http://localhost:3000/api/payment/`,
+		mobileNumber: "9999999999", // Can be a placeholder or actual user number
+		paymentInstrument: {
+			type: "PAY_PAGE",
+		},
+	};
+
+	const base64Payload = Buffer.from(JSON.stringify(payload)).toString(
+		"base64"
+	);
+	const checksumString = `${base64Payload}/pg/v1/pay${saltKey}`;
+	const sha256Checksum = crypto
+		.createHash("sha256")
+		.update(checksumString)
+		.digest("hex");
+	const xVerify = `${sha256Checksum}###${saltIndex}`;
+
 	try {
-		// Initialize Razorpay inside the try block to catch any initialization errors
-		const razorpay = new Razorpay({
-			key_id: razorpayKeyId,
-			key_secret: razorpayKeySecret,
-		});
-
-		const { amount, currency } = await request.json();
-
-		if (amount == null || currency == null) {
-			return NextResponse.json(
-				{ error: "Amount and currency are required." },
-				{ status: 400 }
-			);
-		}
-
-		const options = {
-			amount: amount * 100, // Amount in the smallest currency unit (e.g., paise for INR)
-			currency: currency.toUpperCase(),
-			receipt: `receipt_order_${new Date().getTime()}`,
-		};
-
-		console.log("Creating Razorpay order with options:", options);
-
-		const order = await razorpay.orders.create(options);
-		console.log("Razorpay order created successfully:", order);
-
-		if (!order) {
-			console.error(
-				"Razorpay order creation returned null or undefined."
-			);
-			return NextResponse.json(
-				{
-					error: "Failed to create order with Razorpay. The response was empty.",
-				},
-				{ status: 500 }
-			);
-		}
-
-		return NextResponse.json({
-			orderId: order.id,
-			currency: order.currency,
-			amount: order.amount,
-			key: razorpayKeyId,
-		});
-	} catch (error: unknown) {
-		// Changed 'any' to 'unknown' for better type safety
-		// --- This is the most important part for debugging ---
-		console.error("--- FULL ERROR OBJECT FROM RAZORPAY ---");
-		console.error(error);
-		console.error("---------------------------------------");
-
-		// Type guard to safely access nested properties
-		const razorpayError = error as RazorpayError;
-
-		// Razorpay often nests the real error description. Let's log it if it exists.
-		if (razorpayError.error?.description) {
-			console.error(
-				"Razorpay Error Description:",
-				razorpayError.error.description
-			);
-		}
-
-		const errorMessage =
-			razorpayError.error?.description ||
-			razorpayError.message ||
-			"An unknown error occurred on the server.";
-
-		return NextResponse.json(
+		const response = await fetch(
+			"https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/pay",
 			{
-				error: `Internal server error: ${errorMessage}`,
-				details: error, // Send the full error details to the client for inspection
-			},
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"X-VERIFY": xVerify,
+				},
+				body: JSON.stringify({ request: base64Payload }),
+			}
+		);
+
+		const data = await response.json();
+
+		if (data.success) {
+			return NextResponse.json({
+				success: true,
+				redirectUrl: data.data.instrumentResponse.redirectInfo.url,
+				merchantTransactionId: merchantTransactionId,
+			});
+		} else {
+			// Log the specific error from PhonePe for easier debugging
+			console.error("PhonePe API Error:", data.message);
+			return NextResponse.json(
+				{ error: data.message || "Failed to create payment order." },
+				{ status: 500 } // Or use response.status if available
+			);
+		}
+	} catch (error) {
+		console.error("Error creating PhonePe order:", error);
+		return NextResponse.json(
+			{ error: "Internal server error." },
 			{ status: 500 }
 		);
 	}

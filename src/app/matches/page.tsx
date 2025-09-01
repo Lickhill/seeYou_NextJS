@@ -4,44 +4,13 @@ import { useState, useEffect, useCallback } from "react";
 import { useUser, UserButton } from "@clerk/nextjs";
 import { UserProfile } from "@/models/User";
 import Image from "next/image";
-import Script from "next/script";
+import { useSearchParams } from "next/navigation";
+// Removed Script component as we are using a direct redirect for PhonePe
 
 // --- Type Definitions ---
-interface RazorpayResponse {
-	razorpay_order_id: string;
-	razorpay_payment_id: string;
-	razorpay_signature: string;
-}
+// Removed Razorpay types
 
-interface RazorpayOptions {
-	key: string;
-	amount: number;
-	currency: string;
-	name: string;
-	description: string;
-	order_id: string;
-	handler: (response: RazorpayResponse) => void;
-	prefill: {
-		name: string;
-		email: string;
-	};
-	theme: {
-		color: string;
-	};
-	modal: {
-		ondismiss: () => void;
-	};
-}
-
-declare global {
-	interface Window {
-		Razorpay: new (options: RazorpayOptions) => {
-			open: () => void;
-		};
-	}
-}
-
-// --- SVG Icon Components for better reusability ---
+// --- SVG Icon Components (no changes needed) ---
 
 const HeartIcon = () => (
 	<svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -91,7 +60,7 @@ const InstagramIcon = () => (
 	</svg>
 );
 
-// --- Reusable UI Components ---
+// --- Reusable UI Components (no changes needed) ---
 
 const LoadingSpinner = ({ message }: { message: string }) => (
 	<div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-100 p-4">
@@ -222,12 +191,10 @@ const LockedMatchCard = ({
 	matchId,
 	onUnlock,
 	isPaymentLoading,
-	isRazorpayLoaded,
 }: {
 	matchId: string;
-	onUnlock: (matchId: string, matchName: string) => void;
+	onUnlock: (matchId: string) => void;
 	isPaymentLoading: boolean;
-	isRazorpayLoaded: boolean;
 }) => (
 	<div className="relative glass-card bg-white/40 backdrop-blur-md border border-pink-200/50 rounded-3xl p-6 sm:p-8 text-center transform hover:scale-105 transition-transform duration-500 hover:shadow-2xl group flex flex-col justify-center items-center min-h-[380px]">
 		<div className="absolute inset-0 bg-gradient-to-br from-pink-500/80 to-purple-600/80 backdrop-blur-sm rounded-3xl flex flex-col items-center justify-center z-10 p-6 text-center">
@@ -241,8 +208,8 @@ const LockedMatchCard = ({
 				Pay ₹29 to see contact details
 			</p>
 			<button
-				onClick={() => onUnlock(matchId, "Your Next Match")}
-				disabled={isPaymentLoading || !isRazorpayLoaded}
+				onClick={() => onUnlock(matchId)}
+				disabled={isPaymentLoading}
 				className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-6 py-3 rounded-2xl font-semibold transition-all duration-300 transform hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed border border-white/30 shadow-md w-full max-w-xs"
 			>
 				{isPaymentLoading ? (
@@ -250,8 +217,6 @@ const LockedMatchCard = ({
 						<div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
 						Processing...
 					</span>
-				) : !isRazorpayLoaded ? (
-					"Loading..."
 				) : (
 					"💳 Pay ₹29 to Reveal"
 				)}
@@ -269,8 +234,9 @@ export default function MatchesPage() {
 	const [error, setError] = useState<string | null>(null);
 	const [revealedMatches, setRevealedMatches] = useState<string[]>([]);
 	const [paymentLoading, setPaymentLoading] = useState<string | null>(null);
-	const [razorpayLoaded, setRazorpayLoaded] = useState(false);
 	const [allMatchIds, setAllMatchIds] = useState<string[]>([]);
+
+	const searchParams = useSearchParams();
 
 	const fetchMatches = useCallback(async () => {
 		if (!user?.id) return;
@@ -306,106 +272,50 @@ export default function MatchesPage() {
 	}, [user?.id]);
 
 	useEffect(() => {
+		// This effect runs when the component mounts
 		if (user?.id) {
+			// Check if the URL has payment status parameters from PhonePe
+			const status = searchParams.get("code");
+			const transactionId = searchParams.get("merchantTransactionId");
+
+			if (status === "PAYMENT_SUCCESS" && transactionId) {
+				// Payment was successful, we should fetch the latest match data
+				console.log("Payment successful, refetching matches...");
+			} else if (status === "PAYMENT_ERROR") {
+				// Payment failed, you could show a notification
+				console.error("Payment failed or was cancelled.");
+				alert("Payment failed. Please try again.");
+			}
+			// Always fetch matches on page load
 			fetchMatches();
 		}
-	}, [user?.id, fetchMatches]);
+	}, [user?.id, fetchMatches, searchParams]);
 
-	const handlePayment = async (matchId: string, matchName: string) => {
+	const handlePayment = async (matchId: string) => {
 		if (!user?.id) {
 			alert("User not authenticated. Please sign in again.");
-			return;
-		}
-		if (!razorpayLoaded) {
-			alert(
-				"Payment system is not ready. Please wait a moment and try again."
-			);
 			return;
 		}
 		setPaymentLoading(matchId);
 
 		try {
-			const orderResponse = await fetch("/api/payment/create-order", {
+			const response = await fetch("/api/payment/create-order", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ amount: 29, currency: "INR", matchId }),
+				body: JSON.stringify({
+					amount: 29,
+					userId: user.id,
+					matchId,
+				}),
 			});
 
-			if (!orderResponse.ok) {
-				const errorData = await orderResponse.json();
-				throw new Error(
-					errorData.error ||
-						`HTTP ${orderResponse.status}: Failed to create order`
-				);
+			const data = await response.json();
+
+			if (data.success) {
+				window.location.href = data.redirectUrl;
+			} else {
+				throw new Error(data.error || "Failed to initiate payment.");
 			}
-
-			const orderData = await orderResponse.json();
-			if (!orderData.orderId)
-				throw new Error("Order ID not received from server");
-			if (typeof window === "undefined" || !window.Razorpay)
-				throw new Error("Razorpay script not loaded.");
-
-			const options: RazorpayOptions = {
-				key: orderData.key,
-				amount: orderData.amount,
-				currency: orderData.currency,
-				name: "SeeYou",
-				description: `Reveal your match`,
-				order_id: orderData.orderId,
-				handler: async (response: RazorpayResponse) => {
-					try {
-						const verifyResponse = await fetch(
-							"/api/payment/verify",
-							{
-								method: "POST",
-								headers: { "Content-Type": "application/json" },
-								body: JSON.stringify({
-									orderId: response.razorpay_order_id,
-									paymentId: response.razorpay_payment_id,
-									signature: response.razorpay_signature,
-									userId: user.id,
-									matchId: matchId,
-								}),
-							}
-						);
-
-						const verifyData = await verifyResponse.json();
-						if (verifyResponse.ok && verifyData.success) {
-							await handlePaymentSuccess(matchId);
-							alert(
-								"Payment successful! Your match is now revealed!"
-							);
-						} else {
-							throw new Error(
-								verifyData.error ||
-									"Payment verification failed"
-							);
-						}
-					} catch (error: unknown) {
-						console.error("Payment verification error:", error);
-						const errorMessage =
-							error instanceof Error
-								? error.message
-								: "Unknown error occurred";
-						alert(
-							`Verification Failed: ${errorMessage}. Please contact support.`
-						);
-					} finally {
-						setPaymentLoading(null);
-					}
-				},
-				prefill: {
-					name: user.fullName || "Valued User",
-					email: user.emailAddresses[0]?.emailAddress || "",
-				},
-				theme: { color: "#8b5cf6" },
-				modal: {
-					ondismiss: () => setPaymentLoading(null),
-				},
-			};
-
-			const rzp = new window.Razorpay(options);
-			rzp.open();
 		} catch (error: unknown) {
 			console.error("Payment initiation error:", error);
 			const errorMessage =
@@ -417,122 +327,87 @@ export default function MatchesPage() {
 		}
 	};
 
-	const handlePaymentSuccess = async (matchId: string) => {
-		try {
-			await fetch("/api/profile", {
-				method: "PATCH",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					clerkId: user?.id,
-					revealMatchId: matchId,
-				}),
-			});
-			await fetchMatches(); // Refetch all data to update the UI
-		} catch (err) {
-			console.error("Error updating revealed matches:", err);
-			setError(
-				"Could not update your matches after payment. Please refresh."
-			);
-		}
-	};
-
 	if (loading) return <LoadingSpinner message="Finding your soulmates..." />;
 	if (error) return <ErrorDisplay message={error} onRetry={fetchMatches} />;
 
 	return (
-		<>
-			<Script
-				id="razorpay-checkout-js"
-				src="https://checkout.razorpay.com/v1/checkout.js"
-				onLoad={() => setRazorpayLoaded(true)}
-				onError={() => {
-					console.error("Failed to load Razorpay script");
-					setRazorpayLoaded(false);
-					setError(
-						"Could not load the payment system. Please refresh the page."
-					);
-				}}
-			/>
-			<div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-100 flex flex-col">
-				{/* Header */}
-				<header className="sticky top-0 z-30 glass-effect border-b border-pink-200/50 backdrop-blur-md">
-					<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-						<div className="flex justify-between items-center">
-							<div className="text-left">
-								<h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-pink-600 via-rose-500 to-purple-600 bg-clip-text text-transparent">
-									Your Matches
-								</h1>
-								<p className="text-pink-600/80 text-sm sm:text-base font-light">
-									{allMatchIds.length} potential connections
-									found
-								</p>
-							</div>
-							<div className="flex items-center gap-2 sm:gap-4">
-								<a href="/people">
-									<button className="glass-button bg-white/40 backdrop-blur-sm border border-pink-200/50 text-pink-700 hover:bg-pink-50/50 px-3 sm:px-5 py-2 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 transform hover:scale-105 text-sm sm:text-base">
-										Back
-									</button>
-								</a>
-								<UserButton afterSignOutUrl="/" />
-							</div>
-						</div>
-					</div>
-				</header>
-
-				{/* Main Content */}
-				<main className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 flex-1">
-					{allMatchIds.length === 0 ? (
-						<NoMatchesDisplay />
-					) : (
-						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-							{allMatchIds.map((matchId, index) => {
-								const match = matches.find(
-									(m) => m.clerkId === matchId
-								);
-								const isFirstMatch = index === 0;
-								const isRevealed =
-									isFirstMatch ||
-									revealedMatches.includes(matchId);
-
-								if (isRevealed && match) {
-									return (
-										<RevealedMatchCard
-											key={match.clerkId}
-											match={match}
-										/>
-									);
-								} else {
-									return (
-										<LockedMatchCard
-											key={matchId}
-											matchId={matchId}
-											onUnlock={handlePayment}
-											isPaymentLoading={
-												paymentLoading === matchId
-											}
-											isRazorpayLoaded={razorpayLoaded}
-										/>
-									);
-								}
-							})}
-						</div>
-					)}
-				</main>
-
-				{/* Footer */}
-				<footer className="glass-effect border-t border-pink-200/50 backdrop-blur-md py-6 mt-auto">
-					<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-						<div className="text-center">
-							<h3 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent mb-1">
-								SeeYou
-							</h3>
-							<p className="text-pink-600/70 font-light text-sm sm:text-base">
-								Where hearts connect and stories begin ✨
+		<div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-100 flex flex-col">
+			{/* Header */}
+			<header className="sticky top-0 z-30 glass-effect border-b border-pink-200/50 backdrop-blur-md">
+				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+					<div className="flex justify-between items-center">
+						<div className="text-left">
+							<h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-pink-600 via-rose-500 to-purple-600 bg-clip-text text-transparent">
+								Your Matches
+							</h1>
+							<p className="text-pink-600/80 text-sm sm:text-base font-light">
+								{allMatchIds.length} potential connections found
 							</p>
 						</div>
+						<div className="flex items-center gap-2 sm:gap-4">
+							<a href="/people">
+								<button className="glass-button bg-white/40 backdrop-blur-sm border border-pink-200/50 text-pink-700 hover:bg-pink-50/50 px-3 sm:px-5 py-2 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 transform hover:scale-105 text-sm sm:text-base">
+									Back
+								</button>
+							</a>
+							<UserButton afterSignOutUrl="/" />
+						</div>
 					</div>
-				</footer>
-			</div>
-		</>
+				</div>
+			</header>
+
+			{/* Main Content */}
+			<main className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 flex-1">
+				{allMatchIds.length === 0 ? (
+					<NoMatchesDisplay />
+				) : (
+					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+						{allMatchIds.map((matchId, index) => {
+							const match = matches.find(
+								(m) => m.clerkId === matchId
+							);
+							const isFirstMatch = index === 0;
+							const isRevealed =
+								isFirstMatch ||
+								revealedMatches.includes(matchId);
+
+							if (isRevealed && match) {
+								return (
+									<RevealedMatchCard
+										key={match.clerkId}
+										match={match}
+									/>
+								);
+							} else {
+								return (
+									<LockedMatchCard
+										key={matchId}
+										matchId={matchId}
+										onUnlock={handlePayment}
+										isPaymentLoading={
+											paymentLoading === matchId
+										}
+									/>
+								);
+							}
+						})}
+					</div>
+				)}
+			</main>
+
+			{/* Footer */}
+			<footer className="glass-effect border-t border-pink-200/50 backdrop-blur-md py-6 mt-auto">
+				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+					<div className="text-center">
+						<h3 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent mb-1">
+							SeeYou
+						</h3>
+						<p className="text-pink-600/70 font-light text-sm sm:text-base">
+							Where hearts connect and stories begin ✨
+						</p>
+					</div>
+				</div>
+			</footer>
+		</div>
 	);
 }

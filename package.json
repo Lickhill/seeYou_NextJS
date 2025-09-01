@@ -19,7 +19,8 @@
     "razorpay": "^2.9.6",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "repomix": "^1.2.1"
+    "repomix": "^1.2.1",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -27,6 +28,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/uuid": "^10.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.4.1",
     "tailwindcss": "^4",
