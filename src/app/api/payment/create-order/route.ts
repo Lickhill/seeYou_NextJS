@@ -36,9 +36,9 @@ export async function POST(request: NextRequest) {
 		merchantTransactionId,
 		merchantUserId: userId,
 		amount: amount * 100, // Amount in paise
-		redirectUrl: `${redirectUrl}?merchantTransactionId=${merchantTransactionId}`,
+		redirectUrl: `${redirectUrl}`,
 		redirectMode: "REDIRECT",
-		callbackUrl: `http://localhost:3000/api/payment/`,
+		callbackUrl: `http://localhost:3001/api/payment/`,
 		mobileNumber: "9999999999", // Can be a placeholder or actual user number
 		paymentInstrument: {
 			type: "PAY_PAGE",
